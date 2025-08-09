@@ -1,0 +1,68 @@
+   75  cd /
+   76  ls
+   77  cd opt
+   78  ls
+   79  mkdir miniconda3
+   80  sudo mkdir miniconda3
+   81  ls
+   82  cd miniconda3/
+   83  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+   84  bash Miniconda3-latest-Linux-x86_64.sh
+   85  ls
+   86  sudo wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+   87  ls
+   88  sudo bash Miniconda3-latest-Linux-x86_64.sh
+   89  ls
+   90  mv Miniconda3-latest-Linux-x86_64.sh ../
+   91  sudo mv Miniconda3-latest-Linux-x86_64.sh ../
+   92  ls
+   93  cd ../
+   94  ls
+   95  sudo bash Miniconda3-latest-Linux-x86_64.sh
+   96  sudo rm miniconda3
+   97  sudo rm -rf miniconda3
+   98  ls
+   99  sudo bash Miniconda3-latest-Linux-x86_64.sh
+  100  ls
+  101  cd miniconda3/
+  102  ls
+  103  sudo mkdir -p /opt/conda_pkgs_cache
+  104  ls
+  105  cd ../
+  106  ls
+  107  sudo chmod -R a+rX /opt/miniconda3
+  108  sudo chmod -R a+rwX /opt/conda_pkgs_cache
+  109  sudo chmod a+t /opt/conda_pkgs_cache
+  110  vim /etc/profile.d/conda.sh
+  111  cat /etc/profile.d/conda.sh
+  112  sudo vim /etc/profile.d/conda.sh
+  113  sudo chown root:root /etc/profile.d/conda.sh
+  114  sudo chmod 644 /etc/profile.d/conda.sh
+  115  conda -V
+  116  conda --version
+  117  ls /opt/miniconda3/bin
+  118  cat /opt/miniconda3/bin/conda
+  119  cd /opt/miniconda3/bin/conda
+  120  vim /opt/miniconda3/bin/conda
+  121  sudo vim /etc/profile.d/conda.sh
+  122  conda config --set auto_activate_base false
+  123  cat /opt/miniconda3/.condarc 
+  124  sudo vim /opt/miniconda3/.condarc 
+  125  grep -r "auto_activate_base" /etc/conda /opt/miniconda3 ~/.condarc ~/.config/conda 2>/dev/null
+  126  sudo vim /opt/miniconda3/pkgs/libmamba-2.0.5-haf1ee3a_1/include/mamba/core/context.hpp
+  127  sudo vim /opt/miniconda3/.condarc 
+  128  vim ~./condarc
+  129  vim ~/.condarc
+  130  grep -r "# <<< conda initialize <<<" /etc/conda /opt/miniconda3 ~/.condarc ~/.config/conda 2>/dev/null
+  131  vim ~./condarc
+  132  vim ~/.condarc
+  133  sudo vim /opt/miniconda3/.condarc 
+  134  sudo vim /etc/profile.d/conda.sh
+  135  sudo vim /opt/miniconda3/.condarc 
+  136  vim ~/.condarc
+  137  sudo vim /etc/profile.d/conda.sh
+  138  vim ~/.condarc
+  139  sudo vim /etc/profile.d/conda.sh
+  140  cd ~/
+  141  pwd
+  142  history > commands.txt
