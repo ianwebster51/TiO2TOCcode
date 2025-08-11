@@ -28,18 +28,32 @@ resolutions = dict(core={"resolution": 0.03, "distance": 2})
 mesh = from_meshio(mesh_from_OrderedDict(polygons, resolutions, default_resolution_max=1))
 """
 #code with two modes
-width=0.35
-thickness=0.2
-sep=0.3
-simBuffer=2*width
+width=0.5
+thickness=0.25
+sep=0.2
+simBuffer=5*width
 coreRes = width/20
-cladRes = width/20
+cladRes = width/4
+
+left_core = shapely.geometry.box(-width-sep/2, 0, -sep/2, thickness)
+right_core = shapely.geometry.box(sep/2, 0, width+sep/2, thickness)
+cores=MultiPolygon([left_core, right_core])
+env = shapely.affinity.scale(cores.buffer(simBuffer, resolution=8), xfact=1)
+polygons = OrderedDict(
+    core=cores,
+    box=clip_by_rect(env, -np.inf, -np.inf, np.inf, 0), # left over from what I copied this from, simplify later
+    side=clip_by_rect(env, -np.inf, 0, np.inf, thickness),
+    top=clip_by_rect(env, -np.inf, thickness, np.inf, np.inf),
+)
+
+"""
 radius = 5*width
 left_core = shapely.geometry.box(-width-sep/2, -thickness/2, -sep/2, thickness/2)
 right_core = shapely.geometry.box(sep/2, -thickness/2, width+sep/2, thickness/2)
 cores=MultiPolygon([left_core, right_core])
 env = Point(0, 0).buffer(radius, resolution=16)
-
+"""
+"""
 # Define a surrounding box for PML
 pml_thickness = 2*width  # microns, this assumes only one element in lamdas
 pml_outer = shapely.affinity.scale(env.buffer(pml_thickness, resolution=16), xfact=1)
@@ -51,15 +65,17 @@ polygons = OrderedDict(
     pml=pml_region
     )
 """
+"""
     box=clip_by_rect(env, -np.inf, -np.inf, np.inf, -thickness/2), # left over from what I copied this from, simplify later
     side=clip_by_rect(env, -np.inf, -thickness/2, np.inf, thickness/2),
     top=clip_by_rect(env, -np.inf, thickness/2, np.inf, np.inf),
 """
-resolutions = dict(core={"resolution": coreRes, "distance": simBuffer})
+resolutions = dict(core={"resolution": coreRes, "distance": 0.5})
 mesh = from_meshio(mesh_from_OrderedDict(polygons, resolutions, default_resolution_max=10))
 
 
-#mesh.draw().show()
-
+mesh.draw()
+plt.xlim(-2,2)
+plt.ylim(-1,1)
 #plot_domains(mesh)
-#plt.show()
+plt.show()

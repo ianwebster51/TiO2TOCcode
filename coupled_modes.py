@@ -11,12 +11,16 @@ from shapely.ops import clip_by_rect
 from skfem import Basis, ElementTriP0
 from skfem.io.meshio import from_meshio
 
+from femwell.maxwell.waveguide import plot_mode
 from femwell.maxwell.waveguide import compute_modes
 from femwell.mesh import mesh_from_OrderedDict
 from femwell.visualization import plot_domains
 from typing import Callable
 from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Point
 
+import dill
+import os
 
 import TiO2materials
 import materials
@@ -37,7 +41,7 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
     # result array
     sweepResult = {"TE": np.zeros((len(temps), len(lambdas))), 
                    "TM": np.zeros((len(temps), len(lambdas)))}
-    
+    """ 
     # only need to mesh once
     left_core = shapely.geometry.box(-width-sep/2, 0, -sep/2, thickness)
     right_core = shapely.geometry.box(sep/2, 0, width+sep/2, thickness)
@@ -49,6 +53,16 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
         side=clip_by_rect(env, -np.inf, 0, np.inf, thickness),
         top=clip_by_rect(env, -np.inf, thickness, np.inf, np.inf),
     )
+    """
+    left_core = shapely.geometry.box(-width-sep/2, -thickness/2, -sep/2, thickness/2)
+    right_core = shapely.geometry.box(sep/2, -thickness/2, width+sep/2, thickness/2)
+    cores=MultiPolygon([left_core, right_core])
+    env = Point(0, 0).buffer(simBuffer, resolution=16)
+    polygons = OrderedDict(
+    core=cores,
+    clad=env.difference(cores),
+    )
+
     resolutions = dict(core={"resolution": coreRes, "distance": 0.5})
     mesh = from_meshio(mesh_from_OrderedDict(polygons, resolutions, default_resolution_max=10))
     #mesh.draw().show()
@@ -60,10 +74,15 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
             # only differences each time are eps values, and lambda in sim
             basis0 = Basis(mesh, ElementTriP0())
             epsilon = basis0.zeros()
-            indexDict = {"core": (coreN[thisTemp[0], thisLambda[0]]+off), 
+            """indexDict = {"core": (coreN[thisTemp[0], thisLambda[0]]+off), 
                          "box": cladN[thisTemp[0],thisLambda[0]], 
                          "side": cladN[thisTemp[0],thisLambda[0]],
-                         "top": cladN[thisTemp[0],thisLambda[0]]}
+                         "top": cladN[thisTemp[0],thisLambda[0]]}"""
+            indexDict = {
+                "core": (coreN[thisTemp[0], thisLambda[0]] + off),
+                "clad": cladN[thisTemp[0], thisLambda[0]],
+            }
+
             for subdomain, n in indexDict.items():
                 epsilon[basis0.get_dofs(elements=subdomain)] = n**2
             #if(thisTemp[0] == 0 and thisLambda[0] == 0):
@@ -84,12 +103,18 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
             # modes are sorted by decreasing neff by default
             # pick the highest index TE mode and highest index TM mode
             # polarization criterion is > 90% TE or TM
-            
-            fig, axis = plt.subplots(2,len(modes))
+           
+            #creating smaller region to plot
+            region=shapely.geometry.box(-3*width,-3*width,3*width,3*width)
+
+
+            #fig, axis = plt.subplots(2,len(modes))
+            figs=[None]*4
             polCutoff = 0
             index=0
             # first loop through until we find TE mode we want
             for mode in modes:
+                #print(mode.basis.mesh.__class__.__name__)
                 if (mode.n_eff>cladN[thisTemp[0],thisLambda[0]] and mode.n_eff<((coreN[thisTemp[0],thisLambda[0]])+off)):
                     valid=1;
                 else:
@@ -98,20 +123,34 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
                 if mode.te_fraction > mode.tm_fraction: #polCutoff:
                     #print(str(ax[index]))
                     #print(str(ax1))
-                    sweepResult["TE"][thisTemp[0], thisLambda[0]] = np.real(mode.n_eff)
-                    mode.plot_intensity(axis[0][index])
-                    axis[0][index].set_title(f"TE{index}")
+                    #fig, axs= plot_mode(mode.basis, mode.E.real, title=f"TE{index}")
+                    fig, axs= plot_mode(mode.basis, mode.E.real, title=f"TE{index}")
+                    """for ax in axs:
+                        ax.set_xlim(-2, 2)
+                        ax.set_ylim(-1, 1)"""
+                    figs[index]=fig
+                    #sweepResult["TE"][thisTemp[0], thisLambda[0]] = np.real(mode.n_eff)
+                    #mode.plot_intensity(axis[0][index])
+                    #axis[0][index].set_title(f"TE{index}")
                     print(f"TE{index}, (t = {thisTemp[1]}, l = {thisLambda[1]}) -> neff = {np.real(mode.n_eff):.6f}, valid = {valid}, TE = {mode.te_fraction}, TM = {mode.tm_fraction}")
                 #TM section
                 else: #mode.tm_fraction > polCutoff:
-                    sweepResult["TM"][thisTemp[0], thisLambda[0]] = np.real(mode.n_eff)
-                    mode.plot_intensity(axis[1][index])
-                    axis[1][index].set_title(f"TM{index}")
+                    #plot_mode(mode.basis, mode.E.real, title=f"TM{index}")
+                    fig, axs = plot_mode(mode.basis, mode.E.real, title=f"TM{index}")
+                    """for ax in axs:
+                        ax.set_xlim(-2, 2)
+                        ax.set_ylim(-1, 1)"""
+                    figs[index]=fig
+                    #sweepResult["TM"][thisTemp[0], thisLambda[0]] = np.real(mode.n_eff)
+                    #mode.plot_intensity(axis[1][index])
+                    #axis[1][index].set_title(f"TM{index}")
                     print(f"TM{index}: (t = {thisTemp[1]}, l = {thisLambda[1]}) -> neff = {np.real(mode.n_eff):.6f}, valid = {valid}, TM = {mode.tm_fraction}, TE = {mode.te_fraction}")
 
                 index+=1
-                    
-            plt.show()
+            pwd = os.environ.get("PWD")
+            with open(f"{pwd}/coupled_mode_figs/modes_width_{width}_thick_{thickness}_sep_{sep}_temp_{thisTemp[1]}_l_{thisLambda[1]}_simBuffer_{simBuffer}.pkl", "wb") as f:
+                dill.dump(figs,f)
+            #plt.show()
             #plt.close('all')
 
             
@@ -132,7 +171,7 @@ if __name__ == "__main__":
     for index in range(1):
         w0=widths[0]
         t0=thicknesses[0]
-        simMargin = 70*w0
+        simMargin = 5*w0
         coreres = w0/20
         cladres = w0/4
         print()
