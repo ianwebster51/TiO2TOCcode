@@ -8,6 +8,9 @@ files_sorted = sorted(filenames, key=lambda f: os.path.getmtime(os.path.join(pat
 with open(f"{path}{files_sorted[-1]}", "rb") as f:
     figs=dill.load(f)
 
-for bob in figs:
-    plt.show()
+for fig, axs in figs:
+    for ax in axs:
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(-1, 1)     
+plt.show()
 

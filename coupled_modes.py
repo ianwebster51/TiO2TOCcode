@@ -109,7 +109,7 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
 
 
             #fig, axis = plt.subplots(2,len(modes))
-            figs=[None]*4
+            figs=[]
             polCutoff = 0
             index=0
             # first loop through until we find TE mode we want
@@ -128,7 +128,7 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
                     """for ax in axs:
                         ax.set_xlim(-2, 2)
                         ax.set_ylim(-1, 1)"""
-                    figs[index]=fig
+                    figs.append((fig,axs))
                     #sweepResult["TE"][thisTemp[0], thisLambda[0]] = np.real(mode.n_eff)
                     #mode.plot_intensity(axis[0][index])
                     #axis[0][index].set_title(f"TE{index}")
@@ -140,7 +140,7 @@ def runTempSweep(thickness, width, temps, lambdas, simBuffer,
                     """for ax in axs:
                         ax.set_xlim(-2, 2)
                         ax.set_ylim(-1, 1)"""
-                    figs[index]=fig
+                    figs.append((fig,axs))
                     #sweepResult["TM"][thisTemp[0], thisLambda[0]] = np.real(mode.n_eff)
                     #mode.plot_intensity(axis[1][index])
                     #axis[1][index].set_title(f"TM{index}")
